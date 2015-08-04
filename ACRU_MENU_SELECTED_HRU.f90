@@ -4,7 +4,7 @@
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : Otober 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : May 11, 2015
+! DATE REVISED : July 14, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects only
 !                those HRUs based on lowest and highest HRUs.
@@ -180,7 +180,7 @@ LOGICAL :: EX
       CLOSE(30)
       CLOSE(20)
 !***********************************************************************
-! Time Elapsed
+! ELAPSED TIME
 !***********************************************************************
       CALL DATE_AND_TIME(DATEINFO, TIMEINFO)
       CALL SYSTEM_CLOCK(COUNT_1, COUNT_RATE, COUNT_MAX)
