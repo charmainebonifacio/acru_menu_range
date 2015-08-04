@@ -1,19 +1,19 @@
 !###################################################################
-! TITLE        : ACRU_MENU_SELECTED_HRU
+! TITLE        : ACRU_MENU_RANGE
 !-------------------------------------------------------------------
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : Otober 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : July 14, 2015
+! DATE REVISED : July 15, 2015
 !-------------------------------------------------------------------
-! DESCRIPTION  : The program will read a MENU file and selects only
-!                those HRUs based on lowest and highest HRUs.
+! DESCRIPTION  : The program will read a MENU file and selects the
+!                new range of HRU based on the min and max HRU #.
 ! REQUIREMENT  : MUST run the .EXE file within the input directory.
 ! INPUT        : 1) Lowest HRU Number
 !                2) Highest HRU Number
 ! OUTPUT       : 1) New MENU File
 !###################################################################
-PROGRAM ACRU_MENU_SELECTED_HRU
+PROGRAM ACRU_MENU_RANGE
 IMPLICIT NONE
 CHARACTER(LEN=11), PARAMETER :: debugSTAT = '[ STATUS ] '
 CHARACTER(LEN=11), PARAMETER :: debugRES = '[ RESULT ] '
@@ -222,4 +222,4 @@ LOGICAL :: EX
       WRITE(12,*) 'END OF PROGRAM. '
       CLOSE(12)
    	  STOP
-END PROGRAM ACRU_MENU_SELECTED_HRU
+END PROGRAM ACRU_MENU_RANGE
