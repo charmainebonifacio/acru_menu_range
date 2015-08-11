@@ -9,7 +9,7 @@ This fortran script allows the user to select a specific range of Hydrological r
 
 The purpose is to revise the scripts to Fortran 90 and compiled using the SilverFrost Plato Fortran 95 compiler.
 
-# License
+## License
 
 The modules and scripts are licensed under a GNU General Public License v2.0
 
