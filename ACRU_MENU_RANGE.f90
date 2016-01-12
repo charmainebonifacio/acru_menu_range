@@ -2,7 +2,7 @@
 ! TITLE        : ACRU_SUB_MENU_GENERATOR
 !-------------------------------------------------------------------
 ! EDITED BY    : Dr. Stefan W. Kienzle
-! DATE EDITED  : Otober 9, 2009
+! DATE EDITED  : October 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
 ! DATE REVISED : December 14, 2015
 !-------------------------------------------------------------------
@@ -161,14 +161,14 @@ implicit none
          write(12,*) debugstat, "ISUBNO value invalid."
          isubno = 0
       end if
-      if (hrufirst < hrulast .and. hrufirst < hrunum) then
+      if (hrufirst <= hrulast .and. hrufirst <= hrunum) then
          write(12,*) debugstat, "MINSUB value checked."
          minsub = 1
       else
          write(12,*) debugstat, "MINSUB value invalid."
 		 minsub = 0
       endif
-      if (hrufirst < hrulast .and. hrulast <= hrunum) then
+      if (hrufirst <= hrulast .and. hrulast <= hrunum) then
          write(12,*) debugstat, "MAXSUB value checked."
          maxsub = isubno
       else
