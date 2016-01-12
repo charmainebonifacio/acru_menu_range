@@ -4,7 +4,7 @@
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : Otober 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : July 15, 2015
+! DATE REVISED : December 5, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
@@ -13,213 +13,209 @@
 !                2) Highest HRU Number
 ! OUTPUT       : 1) New MENU File
 !###################################################################
-PROGRAM ACRU_MENU_RANGE
-IMPLICIT NONE
-CHARACTER(LEN=11), PARAMETER :: debugSTAT = '[ STATUS ] '
-CHARACTER(LEN=11), PARAMETER :: debugRES = '[ RESULT ] '
-CHARACTER(LEN=11), PARAMETER :: debugASK = '[  ASK  ] '
-INTEGER :: OK
-INTEGER :: HRUNum, HRUFirst, HRULast
-INTEGER :: COUNT_0, COUNT_1, COUNT_RATE, COUNT_MAX, COUNTER, COUNT2
-CHARACTER(LEN=4), PARAMETER :: MENU = 'MENU'
-CHARACTER(LEN=200) :: OUTFILE, INFILE, LOGRUN
-CHARACTER(LEN=129) :: LINE
-CHARACTER(LEN=8) :: DATEINFO
-CHARACTER(LEN=4) :: YEAR, MONTH*2, DAY*2
-CHARACTER(LEN=2) :: HRS, MIN, SEC*6
-CHARACTER(LEN=10) :: DATE, TIMEINFO, TIMENOW*12, DATENOW, TIMEEND*12, DATEEND
-LOGICAL :: EX
+program acru_menu_range
+implicit none
+
+    character(len=11), parameter :: debugstat = '[ STATUS ] '
+    character(len=11), parameter :: debugres = '[ RESULT ] '
+    character(len=11), parameter :: debugask = '[  ASK  ] '
+    character(len=*), parameter :: format_processed = '( 1X,A11,I7,A53 )'
+    character(len=*), parameter:: format_hrufirst = '( A35,I4 )'
+    character(len=*), parameter:: format_hrulast = '( A34,I4 )'
+    character(len=*), parameter:: format_hrunum = '( A36,I4 )'
+    character(len=*), parameter:: format_isubno = '( 3(3X,I0.4),6X,I1 )'
+    character(len=*), parameter :: format_endmsg = '( A73,A10,A2,A5,A1 )'
+    character(len=*), parameter :: msg = 'ACRU MENU SCRIPT REVISED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
+    character(len=*), parameter :: lines_processed_msg = ' NUMBER OF PROCESSED LINES IN THE MENU PARAMETER FILE.'
+    integer :: ok
+    integer :: hrunum, hrufirst, hrulast, isubno, minsub, maxsub, loopbk = 0
+    integer :: count_0, count_1, count_rate, count_max, counter, count2
+    character(len=4), parameter :: menu = 'MENU'
+    character(len=200) :: outfile, infile, logrun
+    character(len=129) :: line
+    character(len=8) :: dateinfo
+    character(len=4) :: year, month*2, day*2
+    character(len=2) :: hrs, min, sec*6
+    character(len=10) :: date, timeinfo, datenow, dateend
+	  character(len=12) :: timenow, timeend
+    logical :: ex
+
 !***********************************************************************
-! Setup new MENU file
+! setup new menu file
 !***********************************************************************
-      CALL DATE_AND_TIME(DATEINFO, TIMEINFO)
-      CALL SYSTEM_CLOCK(COUNT_0, COUNT_RATE, COUNT_MAX)
-      YEAR = DATEINFO(1:4)
-      MONTH = DATEINFO(5:6)
-      DAY = DATEINFO(7:8)
-      DATE = YEAR // '_' // MONTH // '_' // DAY
-      DATENOW = YEAR // '-' // MONTH // '-' // DAY
-      HRS = TIMEINFO(1:2)
-      MIN = TIMEINFO(3:4)
-      SEC = TIMEINFO(5:10)
-      TIMENOW = HRS // ':' // MIN // ':' // SEC
+      call date_and_time(dateinfo, timeinfo)
+      call system_clock(count_0, count_rate, count_max)
+      year = dateinfo(1:4)
+      month = dateinfo(5:6)
+      day = dateinfo(7:8)
+      date = year // '_' // month // '_' // day
+      datenow = year // '-' // month // '-' // day
+      hrs = timeinfo(1:2)
+      min = timeinfo(3:4)
+      sec = timeinfo(5:10)
+      timenow = hrs // ':' // min // ':' // sec
 !***********************************************************************
-! START PROGRAM
+! start program
 !***********************************************************************
-      WRITE(*,*)
-      WRITE(*,*) "###################################################################"
-      WRITE(*,*) ' '
-      WRITE(*,*) '     The ACRU_MENU program will create a revised MENU File with . '
-      WRITE(*,*) '     a subset of the original number of HRUs. '
-      WRITE(*,*) ' '
-      WRITE(*,*) "###################################################################"
-      WRITE(*,*)
+      write(*,*)
+      write(*,*) "###################################################################"
+      write(*,*) ' '
+      write(*,*) '     THE ACRU_MENU PROGRAM WILL CREATE A REVISED MENU FILE WITH  '
+      write(*,*) '     A SUBSET OF THE ORIGINAL NUMBER OF HRUS. '
+      write(*,*) ' '
+      write(*,*) "###################################################################"
+      write(*,*)
 !***********************************************************************
-! DATE
+! date
 !***********************************************************************
-	  WRITE(*,*) debugSTAT, ' Start Date of log  -> ', DATENOW
-      WRITE(*,*) debugSTAT, ' Start Time of log  -> ', TIMENOW
-      WRITE(*,*)
-      LOGRUN = 'LOGRUN_MENU_'//DATE//'.txt'
-      INQUIRE(FILE=LOGRUN, EXIST=EX)
-      WRITE(*,*) debugSTAT, ' Checking file: ', LOGRUN
-      IF (EX) THEN
-        OPEN(UNIT=12,FILE=LOGRUN,STATUS='REPLACE',IOSTAT=OK)
-      ELSE
-        OPEN(UNIT=12,FILE=LOGRUN,STATUS='NEW',IOSTAT=OK)
-      ENDIF
-      IF (OK/=0) THEN
-        WRITE(*,*) debugRES, 'COULD NOT OPEN FILE.'
-        STOP
-      ENDIF
-	  WRITE(*,*) debugRES, ' File opened: ', LOGRUN
-	  WRITE(*,*) debugRES, ' File status ok = ', OK
-      WRITE(12,*)
+      logrun = 'LOGRUN_MENU_'//date//'.txt'
+      inquire(file=logrun, exist=ex)
+      write(*,*) debugstat, ' checking file: ', logrun
+      if (ex) then
+        open(unit=12,file=logrun,status='replace',iostat=ok)
+      else
+        open(unit=12,file=logrun,status='new',iostat=ok)
+      endif
+      if (ok/=0) then
+        write(*,*) debugres, 'COULD NOT OPEN FILE.'
+        stop
+      endif
+      write(12,*)
 !***********************************************************************
-! START LOG
+! start log
 !***********************************************************************
-      WRITE(12,*) 'START OF PROGRAM. '
-      WRITE(12,*)
-      WRITE(12,*) "###################################################################"
-      WRITE(12,*) ' '
-      WRITE(12,*) '     The ACRU_MENU program will create a revised MENU File with . '
-      WRITE(12,*) '     a subset of the original number of HRUs. '
-      WRITE(12,*) ' '
-      WRITE(12,*) "###################################################################"
-      WRITE(12,*)
-	  WRITE(12,*) debugSTAT, ' DATE -> ', DATENOW
-      WRITE(12,*) debugSTAT, ' TIME -> ', TIMENOW
-      WRITE(12,*)
-      WRITE(12,*) debugSTAT, ' LOGFILE -> ', LOGRUN
-      WRITE(12,*) debugSTAT, ' STATUS -> ', OK
-      INFILE = MENU
-	  OPEN(UNIT=20,FILE=INFILE,IOSTAT=OK)
-      WRITE(*,*) debugRES, ' File opened: ', INFILE
-	  WRITE(*,*) debugRES, ' File status ok = ', OK
-      WRITE(12,*) debugSTAT, ' MENUFILE -> ', INFILE
-      WRITE(12,*) debugSTAT, ' STATUS -> ', OK
-      OUTFILE = MENU//'_SELECTED_HRU'
-      OPEN(UNIT=30,FILE=OUTFILE,IOSTAT=OK)
-      WRITE(*,*) debugRES, ' File opened: ', OUTFILE
-	  WRITE(*,*) debugRES, ' File status ok = ', OK
-      WRITE(12,*) debugSTAT, ' MENUFILE COPY -> ', OUTFILE
-      WRITE(12,*) debugSTAT, ' STATUS -> ', OK
-      WRITE(*,*)
+      write(12,*) 'START OF PROGRAM. '
+      write(12,*)
+      write(12,*) "###################################################################"
+      write(12,*) ' '
+      write(12,*) '     THE ACRU_MENU PROGRAM WILL CREATE A REVISED MENU FILE WITH '
+      write(12,*) '     A SUBSET OF THE ORIGINAL NUMBER OF HRUS. '
+      write(12,*) ' '
+      write(12,*) "###################################################################"
+      write(12,*)
+	  write(12,*) debugstat, ' DATE -> ', datenow
+      write(12,*) debugstat, ' TIME -> ', timenow
+      write(12,*)
+      write(12,*) debugstat, ' LOGFILE -> ', logrun
+      write(12,*) debugstat, ' STATUS -> ', ok
+      infile = menu
+	  open(unit=20,file=infile,iostat=ok)
+      write(12,*) debugstat, ' MENUFILE -> ', infile
+      write(12,*) debugstat, ' STATUS -> ', ok
+      outfile = menu//'_SELECTED_HRU'
+      open(unit=30,file=outfile,iostat=ok)
+      write(12,*) debugstat, ' MENUFILE COPY -> ', outfile
+      write(12,*) debugstat, ' STATUS -> ', ok
+      write(12,*)
 !***********************************************************************
-! START USER INPUT
+! start user input
 !***********************************************************************
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(*,*) "     Key in the first HRU number to process : "
-      READ(*,*) HRUFirst
-      WRITE(*,*) 'HRUNum = ', HRUFirst
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(12,*) "------------------------------------------------------"
-      WRITE(12,*) "     Key in the first HRU number to process : "
-      WRITE(12,*) 'HRUNum = ', HRUFirst
-      WRITE(12,*) "------------------------------------------------------"
+      write(*,*) " ENTER THE FIRST HRU NUMBER TO PROCESS : "
+      read(*,*) hrufirst
+      write(12,format_hrufirst) " THE FIRST HRU NUMBER TO PROCESS : ", hrufirst
 !***********************************************************************
-! CONTINUE USER INPUT
+! continue user input
 !***********************************************************************
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(*,*) "     Key in the last HRU number to process : "
-      READ(*,*) HRULast
-      WRITE(*,*) 'HRUNum = ', HRULast
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(12,*) "------------------------------------------------------"
-      WRITE(12,*) "     Key in the last HRU number to process : "
-      WRITE(12,*) 'HRUNum = ', HRULast
-      WRITE(12,*) "------------------------------------------------------"
+      write(*,*) " ENTER THE LAST HRU NUMBER TO PROCESS : "
+      read(*,*) hrulast
+      write(12,format_hrulast) " THE LAST HRU NUMBER TO PROCESS : ", hrulast
 !***********************************************************************
-! CONTINUE USER INPUT
+! continue user input
 !***********************************************************************
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(*,*) "     Key in the total HRU number in the MENU : "
-      READ(*,*) HRUNum
-      WRITE(*,*) 'HRUNum = ', HRUNum
-      WRITE(*,*) "------------------------------------------------------"
-      WRITE(12,*) "------------------------------------------------------"
-      WRITE(12,*) "     Key in the total HRU number in the MENU : "
-      WRITE(12,*) 'HRUNum = ', HRUNum
-      WRITE(12,*) "------------------------------------------------------"
+      write(*,*) " ENTER THE TOTAL HRU NUMBER IN THE MENU : "
+      read(*,*) hrunum
+      write(12,format_hrunum) " THE TOTAL HRU NUMBER IN THE MENU : ", hrunum
+      write(12,*)
 !***********************************************************************
-! START PROCESSING FILE
+! start processing file
 !***********************************************************************
-      COUNT2 = 1
-	  COUNTER = 0
-  100 FORMAT(A80)
-!     Copy first 18 lines
-      DO 700 WHILE (COUNTER.LT.17)
-	     COUNTER = COUNTER + 1
-         READ(20,100,END=999)LINE
-         WRITE(30,100)LINE
-  700 CONTINUE
-!     Proceed with the rest of the MENU file but write only selected HRUs
-      DO 800 WHILE (COUNT2.LT.147)
-         COUNTER = 0
-         READ(20,100,END=999)LINE
-         WRITE(30,100)LINE
-         READ(20,100,END=999)LINE
-         WRITE(30,100)LINE
-         READ(20,100,END=999)LINE
-         WRITE(30,100)LINE
-         READ(20,100,END=999)LINE
-         WRITE(30,100)LINE
-         READ(20,100,END=999)LINE
-         DO 801 WHILE (COUNTER.LT.HRUNum)
-            COUNTER = COUNTER + 1
-            READ(20,100,END=999)LINE
-            IF(COUNTER.GE.HRUFirst.AND.COUNTER.LE.HRULast) THEN
-              WRITE(30,100)LINE
-            ENDIF
-  801    CONTINUE
-         WRITE(*,*)'Processed ACRU MENU ITEM ',COUNT2,' out of ',HRUNum
-         WRITE(12,*)'Processed ACRU MENU ITEM ',COUNT2,' out of ',HRUNum
-         COUNT2 = COUNT2 + 1
-  800 CONTINUE
-  999 WRITE(*,*) '****************************************************'
-      CLOSE(30)
-      CLOSE(20)
+      count2 = 1
+	  counter = 0
+      ! Check values first
+      if (hrufirst < hrulast .and. hrufirst < hrunum) then
+         write(12,*) debugstat, "MINSUB value checked."
+         minsub = hrufirst
+      endif
+      if (hrufirst < hrulast .and. hrulast <= hrunum) then
+         write(12,*) debugstat, "MAXSUB value checked."
+         maxsub = hrulast
+      endif
+      isubno = (hrulast + 1) - hrufirst
+      if (isubno <= hrunum) then
+         write(12,*) debugstat, "ISUBNO value checked."
+         write(12,*)
+      end if
+  100 format(a80)
+!     copy first 18 lines
+      do 700 while (counter.lt.17)
+	     counter = counter + 1
+         read(20,100,end=999)line
+         if (counter == 11) then
+           write(30,format_isubno) isubno, minsub, maxsub, loopbk
+         else
+           write(30,100)line
+         endif
+  700 continue
+!     proceed with the rest of the menu file but write only selected hrus
+      do 800 while (count2.lt.147)
+         counter = 0
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         do 801 while (counter.lt.hrunum)
+            counter = counter + 1
+            read(20,100,end=999)line
+            if(counter.ge.hrufirst.and.counter.le.hrulast) then
+              write(30,100)line
+            endif
+  801    continue
+         count2 = count2 + 1
+  800 continue
+      write(*,*)
+  999 write(*,*) '****************************************************'
+      close(20)
 !***********************************************************************
-! ELAPSED TIME
+! elapsed time
 !***********************************************************************
-      CALL DATE_AND_TIME(DATEINFO, TIMEINFO)
-      CALL SYSTEM_CLOCK(COUNT_1, COUNT_RATE, COUNT_MAX)
-      YEAR = DATEINFO(1:4)
-      MONTH = DATEINFO(5:6)
-      DAY = DATEINFO(7:8)
-      DATE = YEAR // '_' // MONTH // '_' // DAY
-      DATEEND = YEAR // '-' // MONTH // '-' // DAY
-      HRS = TIMEINFO(1:2)
-      MIN = TIMEINFO(3:4)
-      SEC = TIMEINFO(5:10)
-      TIMEEND = HRS // ':' // MIN // ':' // SEC
+      call date_and_time(dateinfo, timeinfo)
+      call system_clock(count_1, count_rate, count_max)
+      year = dateinfo(1:4)
+      month = dateinfo(5:6)
+      day = dateinfo(7:8)
+      date = year // '_' // month // '_' // day
+      dateend = year // '-' // month // '-' // day
+      hrs = timeinfo(1:2)
+      min = timeinfo(3:4)
+      sec = timeinfo(5:10)
+      timeend = hrs // ':' // min // ':' // sec
 !***********************************************************************
-! END PROGRAM
+! end program
 !***********************************************************************
-      WRITE(*,*) "###################################################################"
-      WRITE(*,*) ' '
-      WRITE(*,*) '   The ACRU_MENU program has finished creating a new menu file. '
-      WRITE(*,*) ' '
-      WRITE(*,*) "###################################################################"
-      WRITE(*,*)
-      WRITE(*,*) debugSTAT, ' End Date of log  -> ', DATEEND
-      WRITE(*,*) debugSTAT, ' End Time of log  -> ', TIMEEND
-      WRITE(*,*)
-      WRITE(*,*) debugSTAT, ' Time Elapsed : ', REAL(COUNT_1 - COUNT_0)/ REAL(COUNT_RATE)
-      WRITE(*,*)
-      WRITE(*,*) 'END OF PROGRAM. '
-      WRITE(12,*) "###################################################################"
-      WRITE(12,*) ' '
-      WRITE(12,*) '   The ACRU_MENU program has finished creating a new menu file. '
-      WRITE(12,*) ' '
-      WRITE(12,*) "###################################################################"
-      WRITE(12,*)
-      WRITE(12,*) debugSTAT, ' End Date of log  -> ', DATEEND
-      WRITE(12,*) debugSTAT, ' End Time of log  -> ', TIMEEND
-      WRITE(12,*)
-      WRITE(12,*) debugSTAT, ' Time Elapsed : ', REAL(COUNT_1 - COUNT_0)/ REAL(COUNT_RATE)
-      WRITE(12,*)
-      WRITE(12,*) 'END OF PROGRAM. '
-      CLOSE(12)
-   	  STOP
-END PROGRAM ACRU_MENU_RANGE
+      write(*,*)
+      write(*,format_processed) debugstat, counter, lines_processed_msg
+      write(12,*) "###################################################################"
+      write(12,*) ' '
+      write(12,*) '   THE ACRU_MENU PROGRAM HAS FINISHED CREATING A NEW MENU FILE. '
+      write(12,*) ' '
+      write(12,*) "###################################################################"
+      write(12,*)
+      write(12,format_processed) debugstat, counter, lines_processed_msg
+      write(12,*)
+      write(12,*) debugstat, ' DATE  -> ', dateend
+      write(12,*) debugstat, ' TIME  -> ', timeend
+      write(12,*)
+      write(12,*) debugstat, ' ELAPSED TIME : ', real(count_1 - count_0)/ real(count_rate)
+      write(12,*)
+      write(12,*) 'END OF PROGRAM. '
+      write(30,format_endmsg) msg, date, '//', timenow,']'
+      endfile(30)
+      close(30)
+      close(12)
+   	  stop
+end program acru_menu_range
