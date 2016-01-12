@@ -1,10 +1,10 @@
 !###################################################################
-! TITLE        : ACRU_MENU_RANGE
+! TITLE        : ACRU_SUB_MENU_GENERATOR
 !-------------------------------------------------------------------
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : October 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : December 7, 2015
+! DATE REVISED : December 9, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
@@ -13,6 +13,8 @@
 !                2) Highest HRU Number
 !                3) Total HRU Number
 ! OUTPUT       : 1) New MENU File
+!                2) Logfile
+!                3) Old MENU File
 !###################################################################
 program acru_menu_range
 implicit none
@@ -36,9 +38,9 @@ implicit none
     character(len=*), parameter :: format_logstat = '( 1X,A11,A20,A20 )'
     character(len=*), parameter :: format_daytime = '( 1X,A11,A20,A15 )'
     character(len=*), parameter :: format_filestat = '( 1X,A11,A20,I4 )'
-    character(len=*), parameter :: format_endmsg = '( A79,A10,A2,A5,A1 )'
-    character(len=*), parameter :: msg = 'ACRU MENU RANGE SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
-    integer :: ok
+    character(len=*), parameter :: format_endmsg = '( A77,A10,A2,A5,A1 )'
+    character(len=*), parameter :: msg = 'ACRU SUB MENU SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
+    integer :: ok, line_num
     integer :: hrunum, hrufirst, hrulast, minsub, maxsub, loopbk = 0
     integer :: isubno, isubnoline
     integer :: count_0, count_1, count_rate, count_max, counter, count2
@@ -114,7 +116,7 @@ implicit none
 	  open(unit=20,file=infile,iostat=ok)
       write(12,format_logstat) debugstat, fileNameOpened , infile
       write(12,format_filestat ) debugstat, fileStat, ok
-      outfile = menu//'_SELECTED_HRU'
+      outfile = 'SUB_'//menu
       open(unit=30,file=outfile,iostat=ok)
       write(12,format_logstat) debugstat, fileNameOpened , outfile
       write(12,format_filestat ) debugstat,  fileStat , ok
@@ -168,12 +170,14 @@ implicit none
       if (isubnoline == hrunum) then
          write(12,*) debugstat, "ISUBNO value checked."
          isubno = (hrulast + 1) - hrufirst
+         line_num = (23 + (isubno + 5) * 150) + isubno
       else
          write(12,*) debugstat, "ISUBNO value invalid."
          isubno = 0
       end if
       write(12,*)
       write(12,*) debugstat, "ISUBNO value in menu file: ", isubnoline
+      write(12,*) debugask, " EXPECTED TOTAL NUMBER OF LINE IN THE MENU : ", line_num
       write(12,*)
       if (minsub == 0 .or. maxsub == 0 .or. isubno == 0) then
          write(12,*) '*****************************************************************'
@@ -196,8 +200,8 @@ implicit none
       count2 = 1
 	  counter = 0
   100 format(a80)
-!     copy first 18 lines
-      do 701 while (counter.lt.17)
+!     copy first 17 lines
+      do 701 while (counter.lt.18)
 	     counter = counter + 1
          read(20,100,end=999)line
          if (counter == 11) then
@@ -207,7 +211,7 @@ implicit none
          endif
   701 continue
 !     proceed with the rest of the menu file but write only selected hrus
-      do 800 while (count2.lt.147)
+      do 800 while (count2 < 147) ! CONTAINERS
          counter = 0
          read(20,100,end=999)line
          write(30,100)line
@@ -220,16 +224,23 @@ implicit none
          read(20,100,end=999)line
          do 801 while (counter.lt.hrunum)
             counter = counter + 1
-            read(20,100,end=999)line
-            if(counter.ge.hrufirst.and.counter.le.hrulast) then
+            if(hrufirst <= counter .and. hrulast >= counter ) then
               write(30,100)line
             endif
+            read(20,100,end=999)line
   801    continue
+         if (count2 == 146) then
+      		write(30,format_endmsg) msg, date, '//', timenow,']'
+      		endfile(30)
+         else
+            write(30,100)
+         end if
          count2 = count2 + 1
   800 continue
-      write(*,*)
-  999 write(*,*) '****************************************************'
+      close(30)
       close(20)
+  999 write(*,*) '****************************************************'
+
 !***********************************************************************
 ! elapsed time
 !***********************************************************************
@@ -261,9 +272,6 @@ implicit none
       write(12,format_etime ) debugstat, etimeStat, real(count_1 - count_0)/ real(count_rate)
       write(12,*)
       write(12,*) 'END OF PROGRAM. '
-      write(30,format_endmsg) msg, date, '//', timenow,']'
-      endfile(30)
-      close(30)
       close(12)
    	  stop
 end program acru_menu_range
