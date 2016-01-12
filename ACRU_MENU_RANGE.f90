@@ -4,7 +4,7 @@
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : October 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : December 14, 2015
+! DATE REVISED : January 8, 2016
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
@@ -31,22 +31,25 @@ implicit none
     character(len=*), parameter:: format_hrufirst = '( 1X,A10,A35,I4 )'
     character(len=*), parameter:: format_hrulast = '( 1X,A10,A34,I4 )'
     character(len=*), parameter:: format_hrunum = '( 1X,A10,A36,I4 )'
+    character(len=*), parameter:: format_hruidstrm = '( 1X,A10,A33,I4 )'
     character(len=*), parameter:: format_isubnoline = '( 3(3X,I0.4),6X,I1 )'
     character(len=*), parameter:: format_isubno = '( 3X,I4 )'
+    character(len=*), parameter:: format_idstrmline = '( 19X,I1,56X,I4 )'
+    character(len=*), parameter:: format_idstrm = '( 2X,I4,3X,I4,6X,I1,56X,I4 )'
     character(len=*), parameter :: format_etime = '( 1X,A11,A20,F10.5 )'
     character(len=*), parameter :: format_logfile = '( 1X,A11,A20,A31 )'
     character(len=*), parameter :: format_logstat = '( 1X,A11,A20,A20 )'
     character(len=*), parameter :: format_daytime = '( 1X,A11,A20,A15 )'
     character(len=*), parameter :: format_filestat = '( 1X,A11,A20,I4 )'
     character(len=*), parameter :: format_endmsg = '( A77,A10,A2,A5,A1 )'
-    character(len=*), parameter :: msg = 'ACRU SUB MENU SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
-    integer :: ok, line_num
+    character(len=*), parameter :: msg = 'ACRU SUB MENU SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION JANUARY 2016. ['
+    integer :: ok, line_num, icelln, fval, hru_line
     integer :: hrunum, hrufirst, hrulast, minsub, maxsub, loopbk = 0
-    integer :: isubno, isubnoline
+    integer :: isubno, isubnoline, idstrm, new_idstrm, diff_idstrm, last_idstrm
     integer :: count_0, count_1, count_rate, count_max, counter, count2
     character(4), parameter :: menu = 'MENU'
     character(len=200) :: outfile, infile, logrun
-    character(len=129) :: line
+    character(len=80) :: line
     character(len=8) :: dateinfo
     character(len=4) :: year, month*2, day*2
     character(len=2) :: hrs, min, sec*6
@@ -124,6 +127,7 @@ implicit none
 !***********************************************************************
 ! start user input
 !***********************************************************************
+      write(*,*) " ----- HRU INFORMATION ----- "
       write(*,*) " ENTER THE FIRST HRU NUMBER TO PROCESS : "
       read(*,*) hrufirst
       write(12,format_hrufirst) debugask, " THE FIRST HRU NUMBER TO PROCESS : ", hrufirst
@@ -140,6 +144,22 @@ implicit none
       read(*,*) hrunum
       write(12,format_hrunum) debugask, " THE TOTAL HRU NUMBER IN THE MENU : ", hrunum
       write(12,*)
+!***********************************************************************
+! continue user input
+!***********************************************************************
+      write(*,*) " ----- IDSTRM INFORMATION ----- "
+      write(*,*) " ENTER THE IDSTRM FOR THE SUBWATERSHED : "
+      read(*,*) idstrm
+      write(12,format_hruidstrm) debugask, " THE IDSTRM NUMBER IN THE MENU : ", idstrm
+      write(12,*)
+!***********************************************************************
+! continue user input
+!***********************************************************************
+      write(*,*) " ENTER THE IDSTRM FOR THE NEXT SUBWATERSHED : "
+      read(*,*) last_idstrm
+      write(12,format_hrulast) debugask, " LAST IDSTRM NUMBER IN THE MENU : ", last_idstrm
+      write(12,*)
+!
 !***********************************************************************
 ! check values first
 !***********************************************************************
@@ -175,12 +195,20 @@ implicit none
          write(12,*) debugstat, "MAXSUB value invalid."
 		 maxsub = 0
       endif
+      if (idstrm <= hrulast) then
+         write(12,*) debugstat, "IDSTRM value checked."
+         diff_idstrm = hrulast - idstrm
+         new_idstrm = isubno - diff_idstrm
+      else
+         write(12,*) debugstat, "IDSTRM value invalid."
+		 new_idstrm = -1
+      endif
       write(12,*)
       write(12,*) debugstat, "ISUBNO value in menu file: ", isubnoline
-      write(12,*) debugstat, "ISUBNO value in sub menu file: ", isubno
+      write(12,*) debugstat, "ISUBNO value in sub menu f ile: ", isubno
       write(12,*) debugstat, "NEW TOTAL NUMBER OF LINE IN THE MENU : ", line_num
       write(12,*)
-      if (minsub == 0 .or. maxsub == 0 .or. isubno == 0) then
+      if (minsub == 0 .or. maxsub == 0 .or. isubno == 0 .or. new_idstrm < 0) then
          write(12,*) '*****************************************************************'
          write(12,*)
 		 write(12,*) debugstat, "Incorrect HRU values were entered. Please try again."
@@ -200,6 +228,7 @@ implicit none
       open(unit=20,file=infile,iostat=ok)
       count2 = 1
 	  counter = 0
+      icelln = 0
   100 format(a80)
 !     copy first 17 lines
       do 701 while (counter.lt.18)
@@ -211,6 +240,33 @@ implicit none
            write(30,100)line
          endif
   701 continue
+!     proceed by changing the icelln and idstrm for the selected hrus
+      do 500 while (count2 == 1) ! CONTAINERS
+         counter = 0
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+         read(20,100,end=999)line
+         write(30,100)line
+		 read(20,format_idstrmline,end=999) fval, hru_line
+         do 501 while (counter.lt.hrunum)
+            counter = counter + 1
+			if (hrufirst <= counter .and. hrulast >= counter) then
+              icelln = icelln + 1
+              if (icelln == new_idstrm) then
+  	        	write(30,format_idstrm) icelln,last_idstrm,fval, hru_line
+         	  else
+            	write(30,format_idstrm) icelln,new_idstrm,fval, hru_line
+         	  endif
+            endif
+            read(20,format_idstrmline,end=999) fval, hru_line
+  501    continue
+         write(30,100)
+         count2 = count2 + 1
+  500 continue
 !     proceed with the rest of the menu file but write only selected hrus
       do 800 while (count2 < 147) ! CONTAINERS
          counter = 0
@@ -222,10 +278,10 @@ implicit none
          write(30,100)line
          read(20,100,end=999)line
          write(30,100)line
-         read(20,100,end=999)line
+		 read(20,100,end=999)line
          do 801 while (counter.lt.hrunum)
             counter = counter + 1
-            if(hrufirst <= counter .and. hrulast >= counter ) then
+			if (hrufirst <= counter .and. hrulast >= counter) then
               write(30,100)line
             endif
             read(20,100,end=999)line
@@ -235,13 +291,12 @@ implicit none
       		endfile(30)
          else
             write(30,100)
-         end if
+         endif
          count2 = count2 + 1
   800 continue
       close(30)
       close(20)
   999 write(*,*) '****************************************************'
-
 !***********************************************************************
 ! elapsed time
 !***********************************************************************
