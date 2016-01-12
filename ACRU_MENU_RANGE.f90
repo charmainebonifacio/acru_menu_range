@@ -12,6 +12,8 @@
 ! INPUT        : 1) Lowest HRU Number
 !                2) Highest HRU Number
 !                3) Total HRU Number
+!                4) Sub IDSTRM Number
+!                5) Next IDSTRM Number
 ! OUTPUT       : 1) New MENU File
 !                2) Logfile
 !                3) Old MENU File
