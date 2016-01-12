@@ -2,9 +2,9 @@
 ! TITLE        : ACRU_SUB_MENU_GENERATOR
 !-------------------------------------------------------------------
 ! EDITED BY    : Dr. Stefan W. Kienzle
-! DATE EDITED  : October 9, 2009
+! DATE EDITED  : Otober 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : December 9, 2015
+! DATE REVISED : December 14, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
@@ -143,20 +143,6 @@ implicit none
 !***********************************************************************
 ! check values first
 !***********************************************************************
-      if (hrufirst < hrulast .and. hrufirst < hrunum) then
-         write(12,*) debugstat, "MINSUB value checked."
-         minsub = hrufirst
-      else
-         write(12,*) debugstat, "MINSUB value invalid."
-		 minsub = 0
-      endif
-      if (hrufirst < hrulast .and. hrulast <= hrunum) then
-         write(12,*) debugstat, "MAXSUB value checked."
-         maxsub = hrulast
-      else
-         write(12,*) debugstat, "MAXSUB value invalid."
-		 maxsub = 0
-      endif
 	  counter = 0
       do 700 while (counter.lt.12)
 	     counter = counter + 1
@@ -175,14 +161,29 @@ implicit none
          write(12,*) debugstat, "ISUBNO value invalid."
          isubno = 0
       end if
+      if (hrufirst < hrulast .and. hrufirst < hrunum) then
+         write(12,*) debugstat, "MINSUB value checked."
+         minsub = 1
+      else
+         write(12,*) debugstat, "MINSUB value invalid."
+		 minsub = 0
+      endif
+      if (hrufirst < hrulast .and. hrulast <= hrunum) then
+         write(12,*) debugstat, "MAXSUB value checked."
+         maxsub = isubno
+      else
+         write(12,*) debugstat, "MAXSUB value invalid."
+		 maxsub = 0
+      endif
       write(12,*)
       write(12,*) debugstat, "ISUBNO value in menu file: ", isubnoline
-      write(12,*) debugask, " EXPECTED TOTAL NUMBER OF LINE IN THE MENU : ", line_num
+      write(12,*) debugstat, "ISUBNO value in sub menu file: ", isubno
+      write(12,*) debugstat, "NEW TOTAL NUMBER OF LINE IN THE MENU : ", line_num
       write(12,*)
       if (minsub == 0 .or. maxsub == 0 .or. isubno == 0) then
          write(12,*) '*****************************************************************'
          write(12,*)
-		 write(12,*) debugstat, "Incorrect HRU values were entered. "
+		 write(12,*) debugstat, "Incorrect HRU values were entered. Please try again."
 		 write(12,*) debugstat, "Exiting program."
          write(12,*)
          write(12,*) '*****************************************************************'
