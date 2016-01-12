@@ -4,13 +4,14 @@
 ! EDITED BY    : Dr. Stefan W. Kienzle
 ! DATE EDITED  : October 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : December 6, 2015
+! DATE REVISED : December 7, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
 ! REQUIREMENT  : MUST run the .EXE file within the input directory.
 ! INPUT        : 1) Lowest HRU Number
 !                2) Highest HRU Number
+!                3) Total HRU Number
 ! OUTPUT       : 1) New MENU File
 !###################################################################
 program acru_menu_range
@@ -25,20 +26,18 @@ implicit none
     character(20), parameter :: logfileStat = '          LOGFILE : '
     character(20), parameter :: fileNameOpened =  '  FILENAME OPENED : '
     character(20), parameter :: fileStat =  '      FILE STATUS : '
-    character(len=*), parameter :: format_processed = '( 1X,A11,I7,A53 )'
-    character(len=*), parameter:: format_hrufirst = '( A10,A35,I4 )'
-    character(len=*), parameter:: format_hrulast = '( A10,A34,I4 )'
-    character(len=*), parameter:: format_hrunum = '( A10,A36,I4 )'
+    character(len=*), parameter:: format_hrufirst = '( 1X,A10,A35,I4 )'
+    character(len=*), parameter:: format_hrulast = '( 1X,A10,A34,I4 )'
+    character(len=*), parameter:: format_hrunum = '( 1X,A10,A36,I4 )'
     character(len=*), parameter:: format_isubnoline = '( 3(3X,I0.4),6X,I1 )'
     character(len=*), parameter:: format_isubno = '( 3X,I4 )'
-    character(len=*), parameter :: format_etime = '( A11,A20,F10.5 )'
-    character(len=*), parameter :: format_logfile = '( A11,A20,A31 )'
-    character(len=*), parameter :: format_logstat = '( A11,A20,A20 )'
-    character(len=*), parameter :: format_daytime = '( A11,A20,A15 )'
-    character(len=*), parameter :: format_filestat = '( A11,A20,I4 )'
+    character(len=*), parameter :: format_etime = '( 1X,A11,A20,F10.5 )'
+    character(len=*), parameter :: format_logfile = '( 1X,A11,A20,A31 )'
+    character(len=*), parameter :: format_logstat = '( 1X,A11,A20,A20 )'
+    character(len=*), parameter :: format_daytime = '( 1X,A11,A20,A15 )'
+    character(len=*), parameter :: format_filestat = '( 1X,A11,A20,I4 )'
     character(len=*), parameter :: format_endmsg = '( A79,A10,A2,A5,A1 )'
     character(len=*), parameter :: msg = 'ACRU MENU RANGE SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
-    character(len=*), parameter :: lines_processed_msg = ' NUMBER OF PROCESSED LINES IN THE MENU PARAMETER FILE.'
     integer :: ok
     integer :: hrunum, hrufirst, hrulast, minsub, maxsub, loopbk = 0
     integer :: isubno, isubnoline
@@ -110,14 +109,14 @@ implicit none
       write(12,format_daytime) debugstat, timeStat, timenow
       write(12,*)
       write(12,format_logfile ) debugstat, logfileStat, logrun
-      write(12,format_logstat ) debugstat, fileStat  , ok
+      write(12,format_filestat ) debugstat, fileStat  , ok
       infile = menu
 	  open(unit=20,file=infile,iostat=ok)
-      write(12,*) debugstat, fileNameOpened , infile
+      write(12,format_logstat) debugstat, fileNameOpened , infile
       write(12,format_filestat ) debugstat, fileStat, ok
       outfile = menu//'_SELECTED_HRU'
       open(unit=30,file=outfile,iostat=ok)
-      write(12,*) debugstat, fileNameOpened , outfile
+      write(12,format_logstat) debugstat, fileNameOpened , outfile
       write(12,format_filestat ) debugstat,  fileStat , ok
       write(12,*)
 !***********************************************************************
@@ -248,15 +247,13 @@ implicit none
 !***********************************************************************
 ! end program
 !***********************************************************************
+      write(*,*) " Check logfile for more information."
       write(*,*)
-      write(*,format_processed) debugstat, counter, lines_processed_msg
-      write(12,*) "###################################################################"
+	  write(12,*) "###################################################################"
       write(12,*) ' '
       write(12,*) '   THE ACRU_MENU PROGRAM HAS FINISHED CREATING A NEW MENU FILE. '
       write(12,*) ' '
       write(12,*) "###################################################################"
-      write(12,*)
-      write(12,format_processed) debugstat, counter, lines_processed_msg
       write(12,*)
       write(12,format_daytime) debugstat, dayStat, dateend
       write(12,format_daytime) debugstat, timeStat, timeend
