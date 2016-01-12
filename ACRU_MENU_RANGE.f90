@@ -2,9 +2,9 @@
 ! TITLE        : ACRU_MENU_RANGE
 !-------------------------------------------------------------------
 ! EDITED BY    : Dr. Stefan W. Kienzle
-! DATE EDITED  : Otober 9, 2009
+! DATE EDITED  : October 9, 2009
 ! REVISED BY   : Charmaine Bonifacio
-! DATE REVISED : December 5, 2015
+! DATE REVISED : December 6, 2015
 !-------------------------------------------------------------------
 ! DESCRIPTION  : The program will read a MENU file and selects the
 !                new range of HRU based on the min and max HRU #.
@@ -16,28 +16,41 @@
 program acru_menu_range
 implicit none
 
-    character(len=11), parameter :: debugstat = '[ STATUS ] '
-    character(len=11), parameter :: debugres = '[ RESULT ] '
-    character(len=11), parameter :: debugask = '[  ASK  ] '
+    character(11), parameter :: debugstat = '[ STATUS ] '
+    character(11), parameter :: debugres = '[ RESULT ] '
+    character(11), parameter :: debugask = '[  ASK  ] '
+    character(20), parameter :: dayStat = '             DATE : '
+    character(20), parameter :: timeStat = '             TIME : '
+    character(20), parameter :: etimeStat = '     ELAPSED TIME : '
+    character(20), parameter :: logfileStat = '          LOGFILE : '
+    character(20), parameter :: fileNameOpened =  '  FILENAME OPENED : '
+    character(20), parameter :: fileStat =  '      FILE STATUS : '
     character(len=*), parameter :: format_processed = '( 1X,A11,I7,A53 )'
-    character(len=*), parameter:: format_hrufirst = '( A35,I4 )'
-    character(len=*), parameter:: format_hrulast = '( A34,I4 )'
-    character(len=*), parameter:: format_hrunum = '( A36,I4 )'
-    character(len=*), parameter:: format_isubno = '( 3(3X,I0.4),6X,I1 )'
-    character(len=*), parameter :: format_endmsg = '( A73,A10,A2,A5,A1 )'
-    character(len=*), parameter :: msg = 'ACRU MENU SCRIPT REVISED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
+    character(len=*), parameter:: format_hrufirst = '( A10,A35,I4 )'
+    character(len=*), parameter:: format_hrulast = '( A10,A34,I4 )'
+    character(len=*), parameter:: format_hrunum = '( A10,A36,I4 )'
+    character(len=*), parameter:: format_isubnoline = '( 3(3X,I0.4),6X,I1 )'
+    character(len=*), parameter:: format_isubno = '( 3X,I4 )'
+    character(len=*), parameter :: format_etime = '( A11,A20,F10.5 )'
+    character(len=*), parameter :: format_logfile = '( A11,A20,A31 )'
+    character(len=*), parameter :: format_logstat = '( A11,A20,A20 )'
+    character(len=*), parameter :: format_daytime = '( A11,A20,A15 )'
+    character(len=*), parameter :: format_filestat = '( A11,A20,I4 )'
+    character(len=*), parameter :: format_endmsg = '( A79,A10,A2,A5,A1 )'
+    character(len=*), parameter :: msg = 'ACRU MENU RANGE SCRIPT CREATED BY CHARMAINE BONIFACIO. VERSION DECEMBER 2015. ['
     character(len=*), parameter :: lines_processed_msg = ' NUMBER OF PROCESSED LINES IN THE MENU PARAMETER FILE.'
     integer :: ok
-    integer :: hrunum, hrufirst, hrulast, isubno, minsub, maxsub, loopbk = 0
+    integer :: hrunum, hrufirst, hrulast, minsub, maxsub, loopbk = 0
+    integer :: isubno, isubnoline
     integer :: count_0, count_1, count_rate, count_max, counter, count2
-    character(len=4), parameter :: menu = 'MENU'
+    character(4), parameter :: menu = 'MENU'
     character(len=200) :: outfile, infile, logrun
     character(len=129) :: line
     character(len=8) :: dateinfo
     character(len=4) :: year, month*2, day*2
     character(len=2) :: hrs, min, sec*6
     character(len=10) :: date, timeinfo, datenow, dateend
-	  character(len=12) :: timenow, timeend
+	character(len=12) :: timenow, timeend
     logical :: ex
 
 !***********************************************************************
@@ -93,69 +106,107 @@ implicit none
       write(12,*) ' '
       write(12,*) "###################################################################"
       write(12,*)
-	  write(12,*) debugstat, ' DATE -> ', datenow
-      write(12,*) debugstat, ' TIME -> ', timenow
+	  write(12,format_daytime) debugstat, dayStat, datenow
+      write(12,format_daytime) debugstat, timeStat, timenow
       write(12,*)
-      write(12,*) debugstat, ' LOGFILE -> ', logrun
-      write(12,*) debugstat, ' STATUS -> ', ok
+      write(12,format_logfile ) debugstat, logfileStat, logrun
+      write(12,format_logstat ) debugstat, fileStat  , ok
       infile = menu
 	  open(unit=20,file=infile,iostat=ok)
-      write(12,*) debugstat, ' MENUFILE -> ', infile
-      write(12,*) debugstat, ' STATUS -> ', ok
+      write(12,*) debugstat, fileNameOpened , infile
+      write(12,format_filestat ) debugstat, fileStat, ok
       outfile = menu//'_SELECTED_HRU'
       open(unit=30,file=outfile,iostat=ok)
-      write(12,*) debugstat, ' MENUFILE COPY -> ', outfile
-      write(12,*) debugstat, ' STATUS -> ', ok
+      write(12,*) debugstat, fileNameOpened , outfile
+      write(12,format_filestat ) debugstat,  fileStat , ok
       write(12,*)
 !***********************************************************************
 ! start user input
 !***********************************************************************
       write(*,*) " ENTER THE FIRST HRU NUMBER TO PROCESS : "
       read(*,*) hrufirst
-      write(12,format_hrufirst) " THE FIRST HRU NUMBER TO PROCESS : ", hrufirst
+      write(12,format_hrufirst) debugask, " THE FIRST HRU NUMBER TO PROCESS : ", hrufirst
 !***********************************************************************
 ! continue user input
 !***********************************************************************
       write(*,*) " ENTER THE LAST HRU NUMBER TO PROCESS : "
       read(*,*) hrulast
-      write(12,format_hrulast) " THE LAST HRU NUMBER TO PROCESS : ", hrulast
+      write(12,format_hrulast) debugask, " THE LAST HRU NUMBER TO PROCESS : ", hrulast
 !***********************************************************************
 ! continue user input
 !***********************************************************************
       write(*,*) " ENTER THE TOTAL HRU NUMBER IN THE MENU : "
       read(*,*) hrunum
-      write(12,format_hrunum) " THE TOTAL HRU NUMBER IN THE MENU : ", hrunum
+      write(12,format_hrunum) debugask, " THE TOTAL HRU NUMBER IN THE MENU : ", hrunum
       write(12,*)
 !***********************************************************************
-! start processing file
+! check values first
 !***********************************************************************
-      count2 = 1
-	  counter = 0
-      ! Check values first
       if (hrufirst < hrulast .and. hrufirst < hrunum) then
          write(12,*) debugstat, "MINSUB value checked."
          minsub = hrufirst
+      else
+         write(12,*) debugstat, "MINSUB value invalid."
+		 minsub = 0
       endif
       if (hrufirst < hrulast .and. hrulast <= hrunum) then
          write(12,*) debugstat, "MAXSUB value checked."
          maxsub = hrulast
+      else
+         write(12,*) debugstat, "MAXSUB value invalid."
+		 maxsub = 0
       endif
-      isubno = (hrulast + 1) - hrufirst
-      if (isubno <= hrunum) then
+	  counter = 0
+      do 700 while (counter.lt.12)
+	     counter = counter + 1
+         if (counter == 11) then
+            read(20,format_isubno) isubnoline
+         else
+            read(20,100) line
+         end if
+  700 end do
+      close(20)
+      if (isubnoline == hrunum) then
          write(12,*) debugstat, "ISUBNO value checked."
-         write(12,*)
+         isubno = (hrulast + 1) - hrufirst
+      else
+         write(12,*) debugstat, "ISUBNO value invalid."
+         isubno = 0
       end if
+      write(12,*)
+      write(12,*) debugstat, "ISUBNO value in menu file: ", isubnoline
+      write(12,*)
+      if (minsub == 0 .or. maxsub == 0 .or. isubno == 0) then
+         write(12,*) '*****************************************************************'
+         write(12,*)
+		 write(12,*) debugstat, "Incorrect HRU values were entered. "
+		 write(12,*) debugstat, "Exiting program."
+         write(12,*)
+         write(12,*) '*****************************************************************'
+         write(12,*)
+         write(12,*) 'END OF PROGRAM. '
+         close(30, status='delete')! only keep log and menu file
+         close(20)
+         close(12)
+         stop
+      endif
+!***********************************************************************
+! start processing file
+!***********************************************************************
+      open(unit=20,file=infile,iostat=ok)
+      count2 = 1
+	  counter = 0
   100 format(a80)
 !     copy first 18 lines
-      do 700 while (counter.lt.17)
+      do 701 while (counter.lt.17)
 	     counter = counter + 1
          read(20,100,end=999)line
          if (counter == 11) then
-           write(30,format_isubno) isubno, minsub, maxsub, loopbk
+           write(30,format_isubnoline) isubno, minsub, maxsub, loopbk
          else
            write(30,100)line
          endif
-  700 continue
+  701 continue
 !     proceed with the rest of the menu file but write only selected hrus
       do 800 while (count2.lt.147)
          counter = 0
@@ -207,10 +258,10 @@ implicit none
       write(12,*)
       write(12,format_processed) debugstat, counter, lines_processed_msg
       write(12,*)
-      write(12,*) debugstat, ' DATE  -> ', dateend
-      write(12,*) debugstat, ' TIME  -> ', timeend
+      write(12,format_daytime) debugstat, dayStat, dateend
+      write(12,format_daytime) debugstat, timeStat, timeend
       write(12,*)
-      write(12,*) debugstat, ' ELAPSED TIME : ', real(count_1 - count_0)/ real(count_rate)
+      write(12,format_etime ) debugstat, etimeStat, real(count_1 - count_0)/ real(count_rate)
       write(12,*)
       write(12,*) 'END OF PROGRAM. '
       write(30,format_endmsg) msg, date, '//', timenow,']'
