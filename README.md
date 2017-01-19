@@ -1,6 +1,20 @@
-# The ACRU New Range Menu Generator
+# The ACRU SUB-MENU BUILDER
 
-This fortran script allows the user to select a specific range of Hydrological response unite (HRUs) and create a new menu parameter file.
+This Fortran90 script allows the user to select a specific range of Hydrological response unite (HRUs) and create a new sub-menu parameter file for the ACRU model (v336).
+
+### Required Files
+- Original menu file 
+ 
+### Required User Input
+- First HRU #
+- Last HRU #
+- Total HRU #
+- Outlet HRU #
+- Outlet HRU # for downstream
+
+### Output Files
+- Sub menu file 
+- Log file
 
 ## Context
 [Dr. Stefan Kienzle](http://people.uleth.ca/~stefan.kienzle/) created many fortran scripts to automate calibration on the [ACRU - Agricultural Catchments Research Unit](http://unfccc.int/adaptation/nairobi_work_programme/knowledge_resources_and_publications/items/5299.php) model using Fortran 77 language and compiled with Compaq Visual Fortran Version 6.6 compiler.
